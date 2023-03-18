@@ -8,8 +8,18 @@ from fastapi import (
     Header,
     Depends
 )
-from typing import List
+from typing import (
+    List,
+    Dict,
+    Optional,
+    Any
+)
+
 from models import Curso, cursos
+
+from fastapi.responses import JSONResponse
+
+from time import sleep
 
 
 app = FastAPI(
@@ -27,17 +37,26 @@ async def get_cursos():
     return cursos
 
 @app.get('/curso/{curso_id}',
-         response_model=List[Curso])
+         response_model=Curso)
 async def get_curso(curso_id: int = Path(default=None,
-                                         gt=0, lt=3)):
+                                         title="Id do curso",
+                                         description="Deve ser entre 1 e 2",
+                                         gt=0, lt=10)):
     try:
-        curso = curso[curso_id]
+        curso = cursos[curso_id]
         return curso
     except KeyError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Curso nao encontrado"
         )
+        
+@app.post('/curso', status_code=status.HTTP_201_CREATED, response_model=Curso)
+async def post_curso(curso: Curso):
+    next_id: int = len(cursos) + 1
+    curso.id = next_id
+    cursos.append(curso)
+    return curso
 
 
 
