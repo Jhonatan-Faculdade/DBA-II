@@ -1,0 +1,2 @@
+#pip install fastapi uvicorn sqlalchemy pydantic gunicorn autopep8 anyio email-validator cryptography aiomysql pymysql  (instalacao de dependencias)
+#pip freeze > requirements.txt (cria um arquivo para ficar salvo as versoes do projeto)
