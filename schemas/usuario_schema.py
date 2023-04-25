@@ -10,4 +10,3 @@ class UsuariosSchemaBase(BaseModel):
     
     class Config:
         orm_mode = True
-    

@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends
 from typing import List
-
 from sqlalchemy.future import select
 from core.deps import get_session
 
