@@ -58,6 +58,7 @@ async def put_usuario(usuario_id: int,
                 usuario_up.senha = usuario.senha
             if usuario.eh_admin:
                 usuario_up.eh_admin = usuario.eh_admin
+            await session.commit()
             return usuario_up
         else:
             raise HTTPException(detail="Usuario nao encontrado",
