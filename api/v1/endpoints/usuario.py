@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from fastapi import APIRouter, Depends, HTTPException, status, Response
+=======
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+>>>>>>> 832ce3b2250a9447fa443bbb9906a723e922956f
 from typing import List
 from sqlalchemy.future import select
 from core.deps import get_session
@@ -17,6 +21,21 @@ async def get_usuarios(db: AsyncSession = Depends(get_session)):
         result = await session.execute(query)
         usuarios: List[UsuariosSchemaBase] = result.scalars().unique().all()
         return usuarios
+    
+@router.get('/{usuario_id}', 
+            response_model=UsuariosSchemaBase,
+            status_code=status.HTTP_200_OK)
+async def get_usuario(usuario_id: int, db: AsyncSession = Depends(get_session)):
+    async with db as session:
+        query = select(UsuarioModel).filter(UsuarioModel.id == usuario_id)
+        result = await session.execute(query)
+        usuario: UsuariosSchemaBase = result.scalars().one_or_none()
+        
+        if usuario:
+            return usuario
+        else:
+            raise HTTPException(detail="Usuario nao encontrado",
+                                status_code=status.HTTP_404_NOT_FOUND)
 
 @router.post('/singup', status_code=status.HTTP_201_CREATED,
             response_model=UsuariosSchemaBase)
@@ -35,7 +54,7 @@ async def post_usuario(usuario: UsuarioSchemaCreate,
         except IntegrityError as e:
             raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
                                 detail='Ja existe esse e-mail cadastrado, {e}')
-            
+                
 @router.put('/{usuario_id}',
             response_model=UsuariosSchemaBase,
             status_code=status.HTTP_202_ACCEPTED)
@@ -58,6 +77,7 @@ async def put_usuario(usuario_id: int,
                 usuario_up.senha = usuario.senha
             if usuario.eh_admin:
                 usuario_up.eh_admin = usuario.eh_admin
+            await session.commit()
             return usuario_up
         else:
             raise HTTPException(detail="Usuario nao encontrado",
