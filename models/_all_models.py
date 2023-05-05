@@ -1,6 +1,5 @@
 from models.usuario_model import UsuarioModel
 from models.categoria_model import CategoriaModel
-<<<<<<< HEAD
 from models.produto_model import ProdutoModel
-=======
->>>>>>> 832ce3b2250a9447fa443bbb9906a723e922956f
+from models.produto_fotos_model import ProdutoFotos
+from models.restaurante_model import RestauranteModel
