@@ -7,13 +7,13 @@ class UsuariosSchemaBase(BaseModel):
     sobrenome: str
     email: EmailStr
     eh_admin: bool = False
-    
+
     class Config:
         orm_mode = True
 
 class UsuarioSchemaCreate(UsuariosSchemaBase):
     senha: str
-    
+
 class UsuarioSchemaUp(UsuariosSchemaBase):
     nome: Optional[str]
     sobrenome: Optional[str]

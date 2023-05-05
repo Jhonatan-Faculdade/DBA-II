@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from typing import List
 from sqlalchemy.future import select
 from core.deps import get_session
@@ -19,14 +19,14 @@ async def get_usuarios(db: AsyncSession = Depends(get_session)):
         return usuarios
 
 @router.post('/singup', status_code=status.HTTP_201_CREATED,
-             response_model=UsuariosSchemaBase)
+            response_model=UsuariosSchemaBase)
 async def post_usuario(usuario: UsuarioSchemaCreate,
-                       db: AsyncSession = Depends(get_session)):
+                    db: AsyncSession = Depends(get_session)):
     novo_usuario: UsuarioModel = UsuarioModel(nome=usuario.nome,
-                                              sobrenome=usuario.sobrenome,
-                                              email=usuario.email,
-                                              senha=usuario.senha,
-                                              eh_admin=usuario.eh_admin)
+                                            sobrenome=usuario.sobrenome,
+                                            email=usuario.email,
+                                            senha=usuario.senha,
+                                            eh_admin=usuario.eh_admin)
     async with db as session:
         try:
             session.add(novo_usuario)
@@ -40,8 +40,8 @@ async def post_usuario(usuario: UsuarioSchemaCreate,
             response_model=UsuariosSchemaBase,
             status_code=status.HTTP_202_ACCEPTED)
 async def put_usuario(usuario_id: int,
-                      usuario: UsuarioSchemaUp,
-                      db: AsyncSession = Depends(get_session)):
+                    usuario: UsuarioSchemaUp,
+                    db: AsyncSession = Depends(get_session)):
     async with db as session:
         query = select(UsuarioModel).filter(UsuarioModel.id == usuario_id)
         result = await session.execute(query)
@@ -77,3 +77,15 @@ async def delete_usuario(usuario_id: int, db: AsyncSession = Depends(get_session
         else:
             raise HTTPException(detail="Usuario nao encontrado",
                                 status_code=status.HTTP_404_NOT_FOUND)
+
+@router.get('/{usuario_id}', response_model=UsuariosSchemaBase, status_code=status.HTTP_200_OK)
+async def get_usuario(usuario_id: int, db: AsyncSession = Depends(get_session)):
+    async with db as session:
+        query = select(UsuarioModel).filter(UsuarioModel.id == usuario_id)
+        result = await session.execute(query)
+        usuario: UsuariosSchemaBase = result.scalars().one_or_none()
+
+        if usuario:
+            return usuario
+        else:
+            raise HTTPException(detail="Usuario não encontrado", status_code=status.HTTP_404_NOT_FOUND)
