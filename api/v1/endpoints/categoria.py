@@ -1,93 +1,85 @@
 from typing import List
-from fastapi import APIRouter, Depends, status, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from models.categoria_model import CategoriaModel
-from schemas.categoria_schema import CategoriaSchema
+from fastapi import APIRouter, Depends, status, HTTPException, Response
 from sqlalchemy.future import select
 from core.deps import get_session
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from models.categoria_model import CategoriaModel
+
+from schemas.categoria_schema import CategoriaSchema
+
 
 router = APIRouter()
+
 
 @router.get('/', response_model=List[CategoriaSchema])
 async def get_categorias(db: AsyncSession = Depends(get_session)):
     async with db as session:
         query = select(CategoriaModel)
         result = await session.execute(query)
-        categorias: List[CategoriaSchema] = result.scalars().unique().all()
+        categorias: List[CategoriaModel] = result.scalars().all()
+
         return categorias
 
-@router.get('/{categoria_id}', 
-            response_model=CategoriaSchema,
-            status_code=status.HTTP_200_OK)
+
+@router.get('/{categoria_id}', response_model=CategoriaSchema, status_code=status.HTTP_200_OK)
 async def get_categoria(categoria_id: int, db: AsyncSession = Depends(get_session)):
     async with db as session:
-        query = select(CategoriaModel).filter(CategoriaModel.id == categoria_id)
+        query = select(CategoriaModel).filter(
+            CategoriaModel.id == categoria_id)
         result = await session.execute(query)
-        categoria: CategoriaSchema = result.scalars().one_or_none()
-        
+        categoria = result.scalar_one_or_none()
         if categoria:
             return categoria
         else:
             raise HTTPException(detail="Categoria nao encontrada",
                                 status_code=status.HTTP_404_NOT_FOUND)
 
-@router.post('/singup', status_code=status.HTTP_201_CREATED)
-async def post_categoria(categoria: CategoriaSchema,
-                       db: AsyncSession = Depends(get_session)):
-    novo_categoria: CategoriaModel(
-        descricao=categoria.descricao,
-        icone=categoria.icone,
-        ativa=categoria.ativa)
-    
+
+@router.post('/', status_code=status.HTTP_201_CREATED, response_model=CategoriaSchema)
+async def post_categoria(categoria: CategoriaSchema, db: AsyncSession = Depends(get_session)):
+    novo_categoria = CategoriaModel(descricao=categoria.descricao,
+                                    icone=categoria.icone,
+                                    eh_ativa=categoria.eh_ativa)
+    db.add(novo_categoria)
+    await db.commit()
+
+    return novo_categoria
+
+
+@router.put('/{categoria_id}', response_model=CategoriaSchema, status_code=status.HTTP_202_ACCEPTED)
+async def put_categoria(categoria_id: int, categoria: CategoriaSchema, db: AsyncSession = Depends(get_session)):
     async with db as session:
-        try:
-            session.add(novo_categoria)
-            await session.commit()
-            return novo_categoria
-        except (Exception) as e:
-            raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                                detail='Erro ao salvar, {e}')
-                
-"""@router.put('/{usuario_id}',
-            response_model=UsuariosSchemaBase,
-            status_code=status.HTTP_202_ACCEPTED)
-async def put_usuario(usuario_id: int,
-                      usuario: UsuarioSchemaUp,
-                      db: AsyncSession = Depends(get_session)):
-    async with db as session:
-        query = select(UsuarioModel).filter(UsuarioModel.id == usuario_id)
+        query = select(CategoriaModel).filter(
+            CategoriaModel.id == categoria_id)
         result = await session.execute(query)
-        usuario_up: UsuariosSchemaBase = result.scalars().unique().one_or_none()
-        
-        if usuario_up:
-            if usuario.nome:
-                usuario_up.nome = usuario.nome
-            if usuario.sobrenome:
-                usuario_up.sobrenome = usuario.sobrenome
-            if usuario.email:
-                usuario_up.email = usuario.email
-            if usuario.senha:
-                usuario_up.senha = usuario.senha
-            if usuario.eh_admin:
-                usuario_up.eh_admin = usuario.eh_admin
+        categoria_up = result.scalar_one_or_none()
+
+        if categoria_up:
+            categoria_up.descricao = categoria.descricao
+            categoria_up.icone = categoria.icone
+            categoria_up.eh_ativa = categoria.eh_ativa
             await session.commit()
-            return usuario_up
+
+            return categoria_up
         else:
-            raise HTTPException(detail="Usuario nao encontrado",
+            raise HTTPException(detail="Categoria nao encontrada",
                                 status_code=status.HTTP_404_NOT_FOUND)
-            
-@router.delete('/{usuario_id}', status_code=status.HTTP_404_NOT_FOUND)
-async def delete_usuario(usuario_id: int, db: AsyncSession = Depends(get_session)):
+
+
+@router.delete('/{categoria_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_categoria(categoria_id: int, db: AsyncSession = Depends(get_session)):
     async with db as session:
-        query = select(UsuarioModel).filter(UsuarioModel.id == usuario_id)
+        query = select(CategoriaModel).filter(
+            CategoriaModel.id == categoria_id)
         result = await session.execute(query)
-        usuario_del: UsuariosSchemaBase = result.scalars().one_or_none()
-        
-        if usuario_del:
-            await session.delete(usuario_del)
+        categoria_del = result.scalar_one_or_none()
+
+        if categoria_del:
+            await session.delete(categoria_del)
             await session.commit()
             return Response(status_code=status.HTTP_204_NO_CONTENT)
+
         else:
-            raise HTTPException(detail="Usuario nao encontrado",
-                                status_code=status.HTTP_404_NOT_FOUND)"""
+            raise HTTPException(detail="Categoria nao encontrada",
+                                status_code=status.HTTP_404_NOT_FOUND)

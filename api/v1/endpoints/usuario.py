@@ -1,24 +1,26 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
 from typing import List
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.future import select
 from core.deps import get_session
-from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from schemas.usuario_schema import UsuarioSchemaCreate, UsuarioSchemaUp, UsuariosSchemaBase
+from sqlalchemy.exc import IntegrityError
 from models.usuario_model import UsuarioModel
+from schemas.usuario_schema import UsuariosSchemaBase, UsuarioSchemaCreate, UsuarioSchemaUp
 
 router = APIRouter()
+
 
 @router.get('/', response_model=List[UsuariosSchemaBase])
 async def get_usuarios(db: AsyncSession = Depends(get_session)):
     async with db as session:
         query = select(UsuarioModel)
         result = await session.execute(query)
-        usuarios: List[UsuariosSchemaBase] = result.scalars().unique().all()
+        usuarios: List[UsuariosSchemaBase] = result.scalars().all()
         return usuarios
-    
-@router.get('/{usuario_id}', 
+
+
+@router.get('/{usuario_id}',
             response_model=UsuariosSchemaBase,
             status_code=status.HTTP_200_OK)
 async def get_usuario(usuario_id: int, db: AsyncSession = Depends(get_session)):
@@ -26,14 +28,15 @@ async def get_usuario(usuario_id: int, db: AsyncSession = Depends(get_session)):
         query = select(UsuarioModel).filter(UsuarioModel.id == usuario_id)
         result = await session.execute(query)
         usuario: UsuariosSchemaBase = result.scalars().one_or_none()
-        
+
         if usuario:
             return usuario
         else:
-            raise HTTPException(detail="Usuario nao encontrado",
+            raise HTTPException(detail="Usuario não encontrado",
                                 status_code=status.HTTP_404_NOT_FOUND)
 
-@router.post('/singup', status_code=status.HTTP_201_CREATED,
+
+@router.post('/signup', status_code=status.HTTP_201_CREATED,
              response_model=UsuariosSchemaBase)
 async def post_usuario(usuario: UsuarioSchemaCreate,
                        db: AsyncSession = Depends(get_session)):
@@ -47,10 +50,11 @@ async def post_usuario(usuario: UsuarioSchemaCreate,
             session.add(novo_usuario)
             await session.commit()
             return novo_usuario
-        except IntegrityError as e:
+        except (IntegrityError) as e:
             raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                                detail='Ja existe esse e-mail cadastrado, {e}')
-                
+                                detail=f'Ja existe esse e-mail cadastrado, {e} ')
+
+
 @router.put('/{usuario_id}',
             response_model=UsuariosSchemaBase,
             status_code=status.HTTP_202_ACCEPTED)
@@ -61,7 +65,7 @@ async def put_usuario(usuario_id: int,
         query = select(UsuarioModel).filter(UsuarioModel.id == usuario_id)
         result = await session.execute(query)
         usuario_up: UsuariosSchemaBase = result.scalars().unique().one_or_none()
-        
+
         if usuario_up:
             if usuario.nome:
                 usuario_up.nome = usuario.nome
@@ -76,20 +80,21 @@ async def put_usuario(usuario_id: int,
             await session.commit()
             return usuario_up
         else:
-            raise HTTPException(detail="Usuario nao encontrado",
+            raise HTTPException(detail="Usuario não encontrado",
                                 status_code=status.HTTP_404_NOT_FOUND)
-            
-@router.delete('/{usuario_id}', status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.delete('/{usuario_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_usuario(usuario_id: int, db: AsyncSession = Depends(get_session)):
     async with db as session:
         query = select(UsuarioModel).filter(UsuarioModel.id == usuario_id)
         result = await session.execute(query)
         usuario_del: UsuariosSchemaBase = result.scalars().one_or_none()
-        
+
         if usuario_del:
             await session.delete(usuario_del)
             await session.commit()
             return Response(status_code=status.HTTP_204_NO_CONTENT)
         else:
-            raise HTTPException(detail="Usuario nao encontrado",
+            raise HTTPException(detail="Usuario não encontrado",
                                 status_code=status.HTTP_404_NOT_FOUND)
