@@ -14,7 +14,7 @@ class UsuariosSchemaBase(BaseModel):
 
 class UsuarioSchemaCreate(UsuariosSchemaBase):
     senha: str
-    
+
 class UsuarioSchemaUp(UsuariosSchemaBase):
     nome: Optional[str]
     sobrenome: Optional[str]

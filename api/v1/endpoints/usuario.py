@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+from fastapi import APIRouter, Depends, HTTPException, status, Response
+=======
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+>>>>>>> 832ce3b2250a9447fa443bbb9906a723e922956f
+>>>>>>> ccc132a80a70250c0b6e32c20b03c863ff38c16a
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.future import select
@@ -35,16 +43,21 @@ async def get_usuario(usuario_id: int, db: AsyncSession = Depends(get_session)):
             raise HTTPException(detail="Usuario não encontrado",
                                 status_code=status.HTTP_404_NOT_FOUND)
 
+<<<<<<< HEAD
 
 @router.post('/signup', status_code=status.HTTP_201_CREATED,
              response_model=UsuariosSchemaBase)
+=======
+@router.post('/singup', status_code=status.HTTP_201_CREATED,
+            response_model=UsuariosSchemaBase)
+>>>>>>> ccc132a80a70250c0b6e32c20b03c863ff38c16a
 async def post_usuario(usuario: UsuarioSchemaCreate,
-                       db: AsyncSession = Depends(get_session)):
+                    db: AsyncSession = Depends(get_session)):
     novo_usuario: UsuarioModel = UsuarioModel(nome=usuario.nome,
-                                              sobrenome=usuario.sobrenome,
-                                              email=usuario.email,
-                                              senha=usuario.senha,
-                                              eh_admin=usuario.eh_admin)
+                                            sobrenome=usuario.sobrenome,
+                                            email=usuario.email,
+                                            senha=usuario.senha,
+                                            eh_admin=usuario.eh_admin)
     async with db as session:
         try:
             session.add(novo_usuario)
@@ -59,8 +72,8 @@ async def post_usuario(usuario: UsuarioSchemaCreate,
             response_model=UsuariosSchemaBase,
             status_code=status.HTTP_202_ACCEPTED)
 async def put_usuario(usuario_id: int,
-                      usuario: UsuarioSchemaUp,
-                      db: AsyncSession = Depends(get_session)):
+                    usuario: UsuarioSchemaUp,
+                    db: AsyncSession = Depends(get_session)):
     async with db as session:
         query = select(UsuarioModel).filter(UsuarioModel.id == usuario_id)
         result = await session.execute(query)
@@ -96,5 +109,22 @@ async def delete_usuario(usuario_id: int, db: AsyncSession = Depends(get_session
             await session.commit()
             return Response(status_code=status.HTTP_204_NO_CONTENT)
         else:
+<<<<<<< HEAD
             raise HTTPException(detail="Usuario não encontrado",
                                 status_code=status.HTTP_404_NOT_FOUND)
+=======
+            raise HTTPException(detail="Usuario nao encontrado",
+                                status_code=status.HTTP_404_NOT_FOUND)
+
+@router.get('/{usuario_id}', response_model=UsuariosSchemaBase, status_code=status.HTTP_200_OK)
+async def get_usuario(usuario_id: int, db: AsyncSession = Depends(get_session)):
+    async with db as session:
+        query = select(UsuarioModel).filter(UsuarioModel.id == usuario_id)
+        result = await session.execute(query)
+        usuario: UsuariosSchemaBase = result.scalars().one_or_none()
+
+        if usuario:
+            return usuario
+        else:
+            raise HTTPException(detail="Usuario não encontrado", status_code=status.HTTP_404_NOT_FOUND)
+>>>>>>> ccc132a80a70250c0b6e32c20b03c863ff38c16a
